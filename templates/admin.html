@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>积分兑换系统 - 管理后台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .nav-item.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .stat-card {
+            transition: transform 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- 登录页面 -->
+    <div id="loginPage" class="min-h-screen flex items-center justify-center">
+        <div class="bg-white p-8 rounded-lg shadow-lg w-96">
+            <div class="text-center mb-6">
+                <i class="fas fa-shield-alt text-5xl text-blue-500 mb-4"></i>
+                <h1 class="text-2xl font-bold text-gray-800">积分兑换系统</h1>
+                <p class="text-gray-600">管理员登录</p>
+            </div>
+            <form id="loginForm" onsubmit="login(event)">
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">用户名</label>
+                    <input type="text" id="username" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" value="admin" required>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-700 mb-2">密码</label>
+                    <input type="password" id="password" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" value="admin123" required>
+                </div>
+                <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition">
+                    <i class="fas fa-sign-in-alt mr-2"></i>登录
+                </button>
+            </form>
+            <div id="loginError" class="mt-4 text-red-500 text-sm text-center hidden"></div>
+        </div>
+    </div>
+
+    <!-- 主页面 -->
+    <div id="mainPage" class="hidden">
+        <!-- 顶部导航 -->
+        <nav class="bg-white shadow-lg">
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="flex justify-between items-center h-16">
+                    <div class="flex items-center">
+                        <i class="fas fa-coins text-2xl text-blue-500 mr-3"></i>
+                        <span class="text-xl font-bold text-gray-800">积分兑换系统</span>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <span class="text-gray-600">
+                            <i class="fas fa-user mr-2"></i>
+                            <span id="adminUsername"></span>
+                        </span>
+                        <button onclick="logout()" class="text-red-500 hover:text-red-700">
+                            <i class="fas fa-sign-out-alt mr-1"></i>退出
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="max-w-7xl mx-auto px-4 py-6">
+            <!-- 侧边导航 -->
+            <div class="flex gap-6">
+                <div class="w-64">
+                    <div class="bg-white rounded-lg shadow-lg p-4">
+                        <div class="space-y-2">
+                            <button onclick="showPage('dashboard')" class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-gray-100 active">
+                                <i class="fas fa-dashboard mr-2"></i>仪表盘
+                            </button>
+                            <button onclick="showPage('users')" class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-gray-100">
+                                <i class="fas fa-users mr-2"></i>会员管理
+                            </button>
+                            <button onclick="showPage('products')" class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-gray-100">
+                                <i class="fas fa-gift mr-2"></i>商品管理
+                            </button>
+                            <button onclick="showPage('orders')" class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-gray-100">
+                                <i class="fas fa-shopping-cart mr-2"></i>订单管理
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 主内容区 -->
+                <div class="flex-1">
+                    <!-- 仪表盘 -->
+                    <div id="dashboardPage" class="page-content">
+                        <h2 class="text-2xl font-bold mb-6">系统概览</h2>
+
+                        <!-- 统计卡片 -->
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                            <div class="stat-card bg-white rounded-lg shadow-lg p-6">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-gray-600 text-sm">总用户数</p>
+                                        <p class="text-3xl font-bold text-blue-500" id="statUsers">0</p>
+                                    </div>
+                                    <i class="fas fa-users text-4xl text-blue-200"></i>
+                                </div>
+                            </div>
+                            <div class="stat-card bg-white rounded-lg shadow-lg p-6">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-gray-600 text-sm">总积分</p>
+                                        <p class="text-3xl font-bold text-green-500" id="statPoints">0</p>
+                                    </div>
+                                    <i class="fas fa-coins text-4xl text-green-200"></i>
+                                </div>
+                            </div>
+                            <div class="stat-card bg-white rounded-lg shadow-lg p-6">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-gray-600 text-sm">总商品数</p>
+                                        <p class="text-3xl font-bold text-purple-500" id="statProducts">0</p>
+                                    </div>
+                                    <i class="fas fa-gift text-4xl text-purple-200"></i>
+                                </div>
+                            </div>
+                            <div class="stat-card bg-white rounded-lg shadow-lg p-6">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-gray-600 text-sm">总订单数</p>
+                                        <p class="text-3xl font-bold text-orange-500" id="statOrders">0</p>
+                                    </div>
+                                    <i class="fas fa-shopping-cart text-4xl text-orange-200"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 快捷操作 -->
+                        <div class="bg-white rounded-lg shadow-lg p-6">
+                            <h3 class="text-xl font-bold mb-4">快捷操作</h3>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <button onclick="showPage('users')" class="p-4 border-2 border-blue-200 rounded-lg hover:bg-blue-50 transition">
+                                    <i class="fas fa-user-plus text-2xl text-blue-500 mb-2"></i>
+                                    <p class="text-sm">会员管理</p>
+                                </button>
+                                <button onclick="showPage('products'); showProductModal()" class="p-4 border-2 border-green-200 rounded-lg hover:bg-green-50 transition">
+                                    <i class="fas fa-plus-circle text-2xl text-green-500 mb-2"></i>
+                                    <p class="text-sm">添加商品</p>
+                                </button>
+                                <button onclick="showPage('orders')" class="p-4 border-2 border-purple-200 rounded-lg hover:bg-purple-50 transition">
+                                    <i class="fas fa-list text-2xl text-purple-500 mb-2"></i>
+                                    <p class="text-sm">订单列表</p>
+                                </button>
+                                <button onclick="loadDashboard()" class="p-4 border-2 border-orange-200 rounded-lg hover:bg-orange-50 transition">
+                                    <i class="fas fa-sync text-2xl text-orange-500 mb-2"></i>
+                                    <p class="text-sm">刷新数据</p>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 会员管理 -->
+                    <div id="usersPage" class="page-content hidden">
+                        <div class="bg-white rounded-lg shadow-lg p-6">
+                            <div class="flex justify-between items-center mb-6">
+                                <h2 class="text-2xl font-bold">会员管理</h2>
+                                <button onclick="loadUsers()" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+                                    <i class="fas fa-sync mr-2"></i>刷新
+                                </button>
+                            </div>
+                            <div id="usersList"></div>
+                        </div>
+                    </div>
+
+                    <!-- 商品管理 -->
+                    <div id="productsPage" class="page-content hidden">
+                        <div class="bg-white rounded-lg shadow-lg p-6">
+                            <div class="flex justify-between items-center mb-6">
+                                <h2 class="text-2xl font-bold">商品管理</h2>
+                                <button onclick="showProductModal()" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600">
+                                    <i class="fas fa-plus mr-2"></i>添加商品
+                                </button>
+                            </div>
+                            <div id="productsList"></div>
+                        </div>
+                    </div>
+
+                    <!-- 订单管理 -->
+                    <div id="ordersPage" class="page-content hidden">
+                        <div class="bg-white rounded-lg shadow-lg p-6">
+                            <div class="flex justify-between items-center mb-6">
+                                <h2 class="text-2xl font-bold">订单管理</h2>
+                                <button onclick="loadOrders()" class="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600">
+                                    <i class="fas fa-sync mr-2"></i>刷新
+                                </button>
+                            </div>
+                            <div id="ordersList"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 模态框容器 -->
+    <div id="modalContainer"></div>
+
+    <script src="/static/js/admin.js"></script>
+</body>
+</html>
