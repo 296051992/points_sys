@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>积分系统管理后台</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .login-form, .main-content {
+            display: none;
+        }
+        .login-form.active, .main-content.active {
+            display: block;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        .tab-buttons {
+            margin-bottom: 20px;
+        }
+        .tab-button {
+            background-color: #e9ecef;
+            margin-right: 5px;
+        }
+        .tab-button.active {
+            background-color: #007bff;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .form-row {
+            display: flex;
+            gap: 10px;
+            align-items: end;
+        }
+        .form-row .form-group {
+            margin-bottom: 0;
+            flex: 1;
+        }
+        .message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>积分系统管理后台</h1>
+        
+        <!-- 登录表单 -->
+        <div id="loginForm" class="login-form active">
+            <h2>管理员登录</h2>
+            <div class="form-group">
+                <label for="username">用户名:</label>
+                <input type="text" id="username" placeholder="输入用户名">
+            </div>
+            <div class="form-group">
+                <label for="password">密码:</label>
+                <input type="password" id="password" placeholder="输入密码">
+            </div>
+            <button onclick="login()">登录</button>
+        </div>
+        
+        <!-- 主内容区域 -->
+        <div id="mainContent" class="main-content">
+            <div style="float: right;">
+                <span id="currentUser">欢迎, </span>
+                <button onclick="logout()" class="btn-danger">退出登录</button>
+            </div>
+            <div style="clear: both;"></div>
+            
+            <!-- 标签页按钮 -->
+            <div class="tab-buttons">
+                <button class="tab-button active" onclick="switchTab('dashboard')">仪表盘</button>
+                <button class="tab-button" onclick="switchTab('users')">用户管理</button>
+                <button class="tab-button" onclick="switchTab('products')">商品管理</button>
+                <button class="tab-button" onclick="switchTab('orders')">订单管理</button>
+                <button class="tab-button" onclick="switchTab('points')">积分管理</button>
+            </div>
+            
+            <!-- 仪表盘 -->
+            <div id="dashboard" class="tab-content active">
+                <h3>系统概览</h3>
+                <div id="statsInfo"></div>
+                <button onclick="loadStats()">刷新统计数据</button>
+            </div>
+            
+            <!-- 用户管理 -->
+            <div id="users" class="tab-content">
+                <h3>用户管理</h3>
+                <div id="usersList"></div>
+                <button onclick="loadUsers()">刷新用户列表</button>
+            </div>
+            
+            <!-- 商品管理 -->
+            <div id="products" class="tab-content">
+                <h3>商品管理</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>商品名称:</label>
+                        <input type="text" id="productName" placeholder="商品名称">
+                    </div>
+                    <div class="form-group">
+                        <label>积分成本:</label>
+                        <input type="number" id="productPointsCost" placeholder="所需积分">
+                    </div>
+                    <div class="form-group">
+                        <label>库存:</label>
+                        <input type="number" id="productStock" placeholder="库存数量" value="-1">
+                    </div>
+                    <div class="form-group">
+                        <button onclick="createProduct()">添加商品</button>
+                    </div>
+                </div>
+                <div id="productsList"></div>
+                <button onclick="loadProducts()">刷新商品列表</button>
+            </div>
+            
+            <!-- 订单管理 -->
+            <div id="orders" class="tab-content">
+                <h3>订单管理</h3>
+                <div id="ordersList"></div>
+                <button onclick="loadOrders()">刷新订单列表</button>
+            </div>
+            
+            <!-- 积分管理 -->
+            <div id="points" class="tab-content">
+                <h3>积分管理</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>用户OpenID:</label>
+                        <input type="text" id="adjustUserOpenid" placeholder="用户OpenID">
+                    </div>
+                    <div class="form-group">
+                        <label>积分变动:</label>
+                        <input type="number" id="adjustPointsDelta" placeholder="正数为增加，负数为减少">
+                    </div>
+                    <div class="form-group">
+                        <label>原因:</label>
+                        <input type="text" id="adjustPointsReason" placeholder="调整原因">
+                    </div>
+                    <div class="form-group">
+                        <button onclick="adjustUserPoints()">调整积分</button>
+                    </div>
+                </div>
+                <div id="pointsLedger"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let authToken = '';
+        let currentUser = '';
+
+        // 切换标签页
+        function switchTab(tabName) {
+            // 隐藏所有标签内容
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            // 移除所有标签按钮的激活状态
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // 显示选中的标签内容
+            document.getElementById(tabName).classList.add('active');
+            // 激活选中的标签按钮
+            event.target.classList.add('active');
+            
+            // 根据标签加载相应数据
+            switch(tabName) {
+                case 'dashboard':
+                    loadStats();
+                    break;
+                case 'users':
+                    loadUsers();
+                    break;
+                case 'products':
+                    loadProducts();
+                    break;
+                case 'orders':
+                    loadOrders();
+                    break;
+                case 'points':
+                    loadPointsLedger();
+                    break;
+            }
+        }
+
+        // 显示消息
+        function showMessage(message, type = 'success') {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${type}`;
+            msgDiv.textContent = message;
+            document.querySelector('.container').insertBefore(msgDiv, document.querySelector('.container').firstChild);
+            
+            setTimeout(() => {
+                msgDiv.remove();
+            }, 5000);
+        }
+
+        // 登录
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (!username || !password) {
+                showMessage('请输入用户名和密码', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/admin/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    authToken = data.access_token;
+                    currentUser = username;
+                    document.getElementById('currentUser').textContent = `欢迎, ${username}`;
+                    document.getElementById('loginForm').classList.remove('active');
+                    document.getElementById('mainContent').classList.add('active');
+                    showMessage('登录成功！');
+                } else {
+                    showMessage(data.detail || '登录失败', 'error');
+                }
+            } catch (error) {
+                showMessage('网络错误或服务器不可用', 'error');
+            }
+        }
+
+        // 退出登录
+        function logout() {
+            authToken = '';
+            currentUser = '';
+            document.getElementById('loginForm').classList.add('active');
+            document.getElementById('mainContent').classList.remove('active');
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        }
+
+        // 加载统计数据
+        async function loadStats() {
+            if (!authToken) return;
+            
+            try {
+                const response = await fetch('/admin/stats', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    let statsHtml = '<ul>';
+                    for (const [key, value] of Object.entries(data)) {
+                        statsHtml += `<li><strong>${key}:</strong> ${value}</li>`;
+                    }
+                    statsHtml += '</ul>';
+                    document.getElementById('statsInfo').innerHTML = statsHtml;
+                } else {
+                    showMessage(data.detail || '获取统计数据失败', 'error');
+                }
+            } catch (error) {
+                showMessage('网络错误或服务器不可用', 'error');
+            }
+        }
+
+        // 加载用户列表
+        async function loadUsers() {
+            if (!authToken) return;
+            
+            try {
+                const response = await fetch('/admin/users', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    let html = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>OpenID</th>
+                                <th>昵称</th>
+                                <th>头像</th>
+                                <th>积分余额</th>
+                                <th>注册时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                    `;
+                    
+                    data.forEach(user => {
+                        html += `
+                        <tr>
+                            <td>${user.openid.substring(0, 8)}...</td>
+                            <td>${user.nickname || '-'}</td>
+                            <td><img src="${user.avatar_url || ''}" alt="avatar" style="width: 30px; height: 30px;"></td>
+                            <td>${user.points_balance}</td>
+                            <td>${new Date(user.created_at).toLocaleString()}</td>
+                            <td>
+                                <button onclick="viewUserPoints('${user.openid}')">查看积分流水</button>
+                                <button onclick="adjustUserPointsDirect('${user.openid}')">调整积分</button>
+                            </td>
+                        </tr>
+                        `;
+                    });
+                    
+                    html += '</tbody></table>';
+                    document.getElementById('usersList').innerHTML = html;
+                } else {
+                    showMessage(data.detail || '获取用户列表失败', 'error');
+                }
+            } catch (error) {
+                showMessage('网络错误或服务器不可用', 'error');
+            }
+        }
+
+        // 查看用户积分流水
+        async function viewUserPoints(openid) {
+            if (!authToken) return;
+            
+            try {
+                const response = await fetch(`/admin/users/${openid}/points-ledger`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    let html = `
+                    <h4>用户 ${openid.substring(0, 8)}... 的积分流水</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>时间</th>
+                                <th>变动值</th>
+                                <th>变动后余额</th>
+                                <th>类型</th>
+                                <th>原因</th>
+                                <th>操作人</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                    `;
+                    
+                    data.forEach(record => {
+                        html += `
+                        <tr>
+                            <td>${new Date(record.timestamp).toLocaleString()}</td>
+                            <td>${record.delta > 0 ? '+' : ''}${record.delta}</td>
+                            <td>${record.balance_after}</td>
+                            <td>${record.type}</td>
+                            <td>${record.reason}</td>
+                            <td>${record.operator}</td>
+                        </tr>
+                        `;
+                    });
+                    
+                    html += '</tbody></table>';
+                    showMessage(html);
+                } else {
+                    showMessage(data.detail || '获取积分流水失败', 'error');
+                }
+            } catch (error) {
+                showMessage('网络错误或服务器不可用', 'error');
+            }
+        }
+
+        // 直接调整用户积分
+        async function adjustUserPointsDirect(openid) {
+            const delta = prompt(`为用户 ${openid.substring(0, 8)}... 调整积分（正数为增加，负数为减少）:`);
+            if (!delta) return;
+            
+            const reason = prompt('调整原因:');
+            if (!reason) return;
+            
+            await adjustUserPointsByOpenid(openid, parseInt(delta), reason);
+        }
+
+        // 加载商品列表
+        async function loadProducts() {
+            if (!authToken) return;
+            
+            try {
+                const response = await fetch('/admin/products', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    let html = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>名称</th>
+                                <th>描述</th>
+                                <th>积分成本</th>
+                                <th>库存</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                    `;
+                    
+                    data.forEach(product => {
+                        html += `
+                        <tr>
+                            <td>${product.id}</td>
+                            <td>${product.name}</td>
+                            <td>${product.description || '-'}</td>
+                            <td>${product.points_cost}</td>
+                            <td>${product.stock === -1 ? '无限' : product.stock}</td>
+                            <td>${product.is_active ? '上架' : '下架'}</td>
+                            <td>
+                                <button onclick="toggleProductStatus(${product.id}, ${product.is_active})">${product.is_active ? '下架' : '上架'}</button>
+                                <button onclick="updateProduct(${product.id})">编辑</button>
+                                <button onclick="deleteProduct(${product.id})" class="btn-danger">删除</button>
+                            </td>
+                        </tr>
+                        `;
+                    });
+                    
+                    html += '</tbody></table>';
+                    document.getElementById('productsList').innerHTML = html;
+                } else {
+                    showMessage(data.detail || '获取商品列表失败', 'error');
+                }
+            } catch (error) {
+                showMessage('网络错误或服务器不可用', 'error');
+            }
+        }
+
+        // 创建商品
+        async function createProduct() {
+            if (!authToken) return;
+            
+            const name = document.getElementById('productName').value;
+            const pointsCost = document.getElementById('productPointsCost').value;
+            const stock = document.getElementById('productStock').value;
+
+            if (!name || !pointsCost) {
+                showMessage('请填写商品名称和积分成本', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/admin/products', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        points_cost: parseInt(pointsCost),
+                        stock: parseInt(stock),
+                        is_active: true
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage('商品创建成功！');
+                    document.getElementById('productName').value = '';
+                    document.getElementById('productPointsCost').value = '';
+                    document.getElementById('productStock').value = '-1';
+                    loadProducts(); // 刷新商品列表
+                } else {
+                    showMessage(data.detail || '创建商品失败', 'error');
+                }
+            } catch (error) {
+                showMessage('网络错误或服务器不可用', 'error');
+            }
+        }
+
+        // 切换商品状态
+        async function toggleProductStatus(productId, isActive) {
+            if (!authToken) return;
+            
+            try {
+                const response = await fetch(`/admin/products/${productId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        is_active: !isActive
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage(`商品${!isActive ? '上架' : '下架'}成功！`);
+                    loadProducts(); // 刷新商品列表
+                } else {
+                    showMessage(data.detail || `商品${!isActive ? '上架' : '下架'}失败`, 'error');
+                }
+            } catch (error) {
+                showMessage('网络错误或服务器不可用', 'error');
+            }
+        }
+
+        // 删除商品
+        async function deleteProduct(productId) {
+            if (!authToken) return;
+            
+            if (!confirm('确定要删除这个商品吗？此操作不可撤销。')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/admin/products/${productId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage('商品删除成功！');
+                    loadProducts(); // 刷新商品列表
+                } else {
+                    showMessage(data.detail || '删除商品失败', 'error');
+                }
+            } catch (error) {
+                showMessage('网络错误或服务器不可用', 'error');
+            }
+        }
+
+        // 加载订单列表
+        async function loadOrders() {
+            if (!authToken) return;
+            
+            try {
+                const response = await fetch('/admin/orders', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    let html = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>订单号</th>
+                                <th>用户OpenID</th>
+                                <th>商品ID</th>
+                                <th>商品名称</th>
+                                <th>消耗积分</th>
+                                <th>状态</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                    `;
+                    
+                    data.forEach(order => {
+                        html += `
+                        <tr>
+                            <td>${order.order_no}</td>
+                            <td>${order.openid.substring(0, 8)}...</td>
+                            <td>${order.product_id}</td>
+                            <td>${order.product_name}</td>
+                            <td>${order.points_cost}</td>
+                            <td>${order.status}</td>
+                            <td>${new Date(order.created_at).toLocaleString()}</td>
+                            <td>
+                                ${order.status === 'pending' ? `<button onclick="fulfillOrder('${order.order_no}')">完成订单</button>` : ''}
+                                ${['pending', 'confirmed'].includes(order.status) ? `<button onclick="cancelOrder('${order.order_no}')">取消订单</button>` : ''}
+                            </td>
+                        </tr>
+                        `;
+                    });
+                    
+                    html += '</tbody></table>';
+                    document.getElementById('ordersList').innerHTML = html;
+                } else {
+                    showMessage(data.detail || '获取订单列表失败', 'error');
+                }
+            } catch (error) {
+                showMessage('网络错误或服务器不可用', 'error');
+            }
+        }
+
+        // 完成订单
+        async function fulfillOrder(orderNo) {
+            if (!authToken) return;
+            
+            if (!confirm(`确定要完成订单 ${orderNo} 吗？`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/admin/orders/${orderNo}/fulfill`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage('订单完成成功！');
+                    loadOrders(); // 刷新订单列表
+                } else {
+                    showMessage(data.detail || '完成订单失败', 'error');
+                }
+            } catch (error) {
+                showMessage('网络错误或服务器不可用', 'error');
+            }
+        }
+
+        // 取消订单
+        async function cancelOrder(orderNo) {
+            if (!authToken) return;
+            
+            if (!confirm(`确定要取消订单 ${orderNo} 吗？`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/admin/orders/${orderNo}/cancel`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage('订单取消成功！');
+                    loadOrders(); // 刷新订单列表
+                } else {
+                    showMessage(data.detail || '取消订单失败', 'error');
+                }
+            } catch (error) {
+                showMessage('网络错误或服务器不可用', 'error');
+            }
+        }
+
+        // 调整用户积分
+        async function adjustUserPoints() {
+            if (!authToken) return;
+            
+            const openid = document.getElementById('adjustUserOpenid').value;
+            const delta = parseInt(document.getElementById('adjustPointsDelta').value);
+            const reason = document.getElementById('adjustPointsReason').value;
+
+            if (!openid || isNaN(delta) || !reason) {
+                showMessage('请填写完整信息', 'error');
+                return;
+            }
+
+            await adjustUserPointsByOpenid(openid, delta, reason);
+        }
+
+        // 通过openid调整用户积分
+        async function adjustUserPointsByOpenid(openid, delta, reason) {
+            if (!authToken) return;
+
+            try {
+                const response = await fetch(`/admin/users/${openid}/points-adjust`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        delta: delta,
+                        reason: reason
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage(`用户 ${openid.substring(0, 8)}... 积分调整成功！`);
+                    document.getElementById('adjustUserOpenid').value = '';
+                    document.getElementById('adjustPointsDelta').value = '';
+                    document.getElementById('adjustPointsReason').value = '';
+                } else {
+                    showMessage(data.detail || '调整积分失败', 'error');
+                }
+            } catch (error) {
+                showMessage('网络错误或服务器不可用', 'error');
+            }
+        }
+
+        // 加载积分流水
+        async function loadPointsLedger() {
+            if (!authToken) return;
+            
+            try {
+                // 这里可以实现查看所有积分流水的功能
+                showMessage('积分流水功能需要指定用户查看，请在用户管理中点击"查看积分流水"按钮', 'error');
+            } catch (error) {
+                showMessage('网络错误或服务器不可用', 'error');
+            }
+        }
+
+        // 页面加载时检查是否已有token（可以从localStorage恢复）
+        window.onload = function() {
+            // 这里可以实现从localStorage恢复token的功能
+        };
+    </script>
+</body>
+</html>

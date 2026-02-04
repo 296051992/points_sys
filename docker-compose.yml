@@ -15,6 +15,7 @@ services:
     volumes:
       - ./data:/app/data
       - ./.env:/app/.env
+      - ./static:/app/static
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
